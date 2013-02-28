@@ -15,7 +15,10 @@ $CWD = $dir;
 my $dbh;
 
 sub connect_db {
-    $dbh = DBI->connect("dbi:SQLite:$dir/db.db", "", "");
+    my $ds   = $ENV{TEST_DBI_DS}   // "dbi:SQLite:$dir/db.db";
+    my $user = $ENV{TEST_DBI_USER} // "";
+    my $pass = $ENV{TEST_DBI_PASS} // "";
+    $dbh = DBI->connect($ds, $user, $pass, {RaiseError=>1});
 }
 
 my $full_sqls = [
