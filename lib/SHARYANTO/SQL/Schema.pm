@@ -86,6 +86,8 @@ sub create_or_update_db_schema {
     my $sqls = $args{sqls};
     my $dbh  = $args{dbh};
 
+    local $dbh->{RaiseError};
+
     # first, check current schema version
     my $v;
     my @t = $dbh->tables("", undef, "meta");
@@ -94,16 +96,34 @@ sub create_or_update_db_schema {
             "SELECT value FROM meta WHERE name='schema_version'");
     } else {
         $v = 0;
-        $dbh->do("CREATE TABLE meta (name VARCHAR(64) NOT NULL PRIMARY KEY, value VARCHAR(255))");
-        $dbh->do("INSERT INTO meta (name,value) VALUES ('schema_version',0)");
+        $dbh->do("CREATE TABLE meta (name VARCHAR(64) NOT NULL PRIMARY KEY, value VARCHAR(255))")
+            or return [500, "Can't create table 'meta': " . $dbh->errstr];
+        $dbh->do("INSERT INTO meta (name,value) VALUES ('schema_version',0)")
+            or return [500, "Can't insert into 'meta': " . $dbh->errstr];
     }
 
+    # perform schema upgrade atomically (at least for db that supports it like
+    # postgres)
+    my $err;
+  UPGRADE:
     for my $i (($v+1) .. @$sqls) {
+        undef $err;
         $log->debug("Updating database schema to version $i ...");
+        $dbh->begin_work;
         for my $sql (@{ $sqls->[$i-1] }) {
-            $dbh->do($sql);
+            $dbh->do($sql) or do { $err = $dbh->errstr; last UPGRADE };
         }
-        $dbh->do("UPDATE meta SET value=$i WHERE name='schema_version'");
+        $dbh->do("UPDATE meta SET value=$i WHERE name='schema_version'")
+            or do { $err = $dbh->errstr; last UPGRADE };
+        $dbh->commit or do { $err = $dbh->errstr; last UPGRADE };
+        $v = $i;
+    }
+    if ($err) {
+        $log->error("Can't upgrade schema (from version $v): $err");
+        $dbh->rollback;
+        return [500, "Can't upgrade schema (from version $v): $err"];
+    } else {
+        return [200, "OK", {version=>$v}];
     }
 
     [200];
