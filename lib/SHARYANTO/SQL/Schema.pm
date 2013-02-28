@@ -78,9 +78,10 @@ Example:
 _
         },
     },
+    "_perinci.sub.wrapper.validate_args" => 0,
 };
 sub create_or_update_db_schema {
-    my %args = @_;
+    my %args = @_; # VALIDATE_ARGS
 
     my $sqls = $args{sqls};
     my $dbh  = $args{dbh};
