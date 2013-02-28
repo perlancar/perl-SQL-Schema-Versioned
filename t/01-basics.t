@@ -15,9 +15,15 @@ $CWD = $dir;
 my $dbh;
 
 sub connect_db {
-    my $ds   = $ENV{TEST_DBI_DS}   // "dbi:SQLite:$dir/db.db";
-    my $user = $ENV{TEST_DBI_USER} // "";
-    my $pass = $ENV{TEST_DBI_PASS} // "";
+    my ($ds, $user, $pass);
+    if ($ds = $ENV{TEST_DBI_DS}) {
+        $user = $ENV{TEST_DBI_USER};
+        $pass = $ENV{TEST_DBI_PASS};
+    } else {
+        $ds = "dbi:SQLite:$dir/db.db";
+        $user = "";
+        $pass = "";
+    }
     $dbh = DBI->connect($ds, $user, $pass, {RaiseError=>1});
 }
 
