@@ -27,6 +27,12 @@ sub connect_db {
     $dbh = DBI->connect($ds, $user, $pass, {RaiseError=>1});
 }
 
+sub reset_db {
+    $dbh->begin_work;
+    $dbh->do("DROP TABLE IF EXISTS $_") for qw(t1 t2 t3 t4 meta);
+    $dbh->commit;
+}
+
 my $full_sqls = [
     [
         "CREATE TABLE t1 (i INT)",
@@ -96,9 +102,7 @@ subtest "upgrade to v3" => sub {
 };
 
 subtest "create (directly to v3)" => sub {
-    undef $dbh;
-    unlink "$dir/db.db";
-    connect_db();
+    reset_db();
     $sqls = [ $full_sqls->[0], $full_sqls->[1], $full_sqls->[2] ];
     create_or_update_db_schema(dbh => $dbh, sqls => $sqls);
     table_exists(qw/t1 t4/); table_not_exists(qw/t2 t3/);
@@ -107,9 +111,7 @@ subtest "create (directly to v3)" => sub {
 
 # XXX should use postgres to test atomicity of upgrade
 subtest "failed upgrade 1->2 due to error in SQL" => sub {
-    undef $dbh;
-    unlink "$dir/db.db";
-    connect_db();
+    reset_db();
     $sqls = [ $full_sqls->[0],
               ["blah"] ];
     my $res = create_or_update_db_schema(dbh => $dbh, sqls => $sqls);
@@ -119,9 +121,7 @@ subtest "failed upgrade 1->2 due to error in SQL" => sub {
     v_is(1);
 };
 subtest "failed upgrade 2->3 due to error in SQL" => sub {
-    undef $dbh;
-    unlink "$dir/db.db";
-    connect_db();
+    reset_db();
     $sqls = [ $full_sqls->[0],
               $full_sqls->[1],
               ["blah"] ];
