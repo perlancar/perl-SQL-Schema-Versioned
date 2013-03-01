@@ -79,6 +79,7 @@ sub v_is {
 }
 
 connect_db();
+reset_db();
 
 subtest "create (v1)" => sub {
     $sqls = [ $full_sqls->[0] ];
@@ -134,6 +135,7 @@ subtest "failed upgrade 2->3 due to error in SQL" => sub {
 
 DONE_TESTING:
 done_testing();
+reset_db();
 if (Test::More->builder->is_passing) {
     $CWD = "/";
 } else {
