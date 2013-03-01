@@ -2,11 +2,11 @@ Revision history for SHARYANTO-SQL-Schema
 
 0.02    2013-02-28 (SHARYANTO)
 
-        - Add error handling when upgrade fails.
+        - Add error handling for when upgrade fails.
 
-        - Wrap each upgrade with transaction block.
+        - Wrap each upgrade within transaction block.
 
-        - Test in Postgres.
+        - Test under Postgres.
 
 
 0.01    2013-02-28 (SHARYANTO)
