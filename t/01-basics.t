@@ -4,6 +4,7 @@ use 5.010;
 use strict;
 use warnings;
 
+use Data::Clone;
 use DBI;
 use File::chdir;
 use File::Temp qw(tempdir);
@@ -33,20 +34,27 @@ sub reset_db {
     $dbh->commit;
 }
 
-my $full_sqls = [
-    [
+my $spec0 = {
+    latest_v => 3,
+
+    install => [
+        "CREATE TABLE t1 (i INT)",
+        "CREATE TABLE t4 (i INT)",
+    ],
+
+    upgrade_to_v1 => [
         "CREATE TABLE t1 (i INT)",
         "CREATE TABLE t2 (i INT)",
         "CREATE TABLE t3 (i INT)",
     ],
-    [
+    upgrade_to_v2 => [
         "CREATE TABLE t4 (i INT)",
         "DROP TABLE t3",
     ],
-    [
+    upgrade_to_v3 => [
         "DROP TABLE t2",
     ],
-];
+};
 my $sqls;
 
 sub _table_exists_or_not_exists_ok {
@@ -82,30 +90,32 @@ connect_db();
 reset_db();
 
 subtest "create (v1)" => sub {
-    $sqls = [ $full_sqls->[0] ];
-    create_or_update_db_schema(dbh => $dbh, sqls => $sqls);
+    my $spec = clone($spec0);
+    delete $spec->{install}; $spec->{latest_v} = 1;
+    create_or_update_db_schema(dbh => $dbh, spec => $spec);
     table_exists(qw/t1 t2 t3/); table_not_exists(qw/t4/);
     v_is(1);
 };
 
 subtest "upgrade to v2" => sub {
-    $sqls = [ $full_sqls->[0], $full_sqls->[1] ];
-    create_or_update_db_schema(dbh => $dbh, sqls => $sqls);
+    my $spec = clone($spec0);
+    $spec->{latest_v} = 2;
+    create_or_update_db_schema(dbh => $dbh, spec => $spec);
     table_exists(qw/t1 t2 t4/); table_not_exists(qw/t3/);
     v_is(2);
 };
 
 subtest "upgrade to v3" => sub {
-    $sqls = [ $full_sqls->[0], $full_sqls->[1], $full_sqls->[2] ];
-    create_or_update_db_schema(dbh => $dbh, sqls => $sqls);
+    my $spec = clone($spec0);
+    create_or_update_db_schema(dbh => $dbh, spec => $spec);
     table_exists(qw/t1 t4/); table_not_exists(qw/t2 t3/);
     v_is(3);
 };
 
-subtest "create (directly to v3)" => sub {
+subtest "create (directly to v3, via install)" => sub {
     reset_db();
-    $sqls = [ $full_sqls->[0], $full_sqls->[1], $full_sqls->[2] ];
-    create_or_update_db_schema(dbh => $dbh, sqls => $sqls);
+    my $spec = clone($spec0);
+    create_or_update_db_schema(dbh => $dbh, spec => $spec);
     table_exists(qw/t1 t4/); table_not_exists(qw/t2 t3/);
     v_is(3);
 };
@@ -113,9 +123,9 @@ subtest "create (directly to v3)" => sub {
 # XXX should use postgres to test atomicity of upgrade
 subtest "failed upgrade 1->2 due to error in SQL" => sub {
     reset_db();
-    $sqls = [ $full_sqls->[0],
-              ["blah"] ];
-    my $res = create_or_update_db_schema(dbh => $dbh, sqls => $sqls);
+    my $spec = clone($spec0);
+    delete $spec->{install}; $spec->{upgrade_to_v2} = ['blah'];
+    my $res = create_or_update_db_schema(dbh => $dbh, spec => $spec);
     diag explain $res;
     is($res->[0], 500, "res");
     table_exists(qw/t1 t2 t3/); table_not_exists(qw/t4/);
@@ -123,10 +133,9 @@ subtest "failed upgrade 1->2 due to error in SQL" => sub {
 };
 subtest "failed upgrade 2->3 due to error in SQL" => sub {
     reset_db();
-    $sqls = [ $full_sqls->[0],
-              $full_sqls->[1],
-              ["blah"] ];
-    my $res = create_or_update_db_schema(dbh => $dbh, sqls => $sqls);
+    my $spec = clone($spec0);
+    delete $spec->{install}; $spec->{upgrade_to_v3} = ['blah'];
+    my $res = create_or_update_db_schema(dbh => $dbh, spec => $spec);
     diag explain $res;
     is($res->[0], 500, "res");
     table_exists(qw/t1 t2 t4/); table_not_exists(qw/t3/);
