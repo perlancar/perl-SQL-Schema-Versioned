@@ -41,7 +41,7 @@ statements will be executed. The final result is schema at version 1. If `meta`
 table exists, schema version will be read from it and one or more series of SQL
 statements will be executed to get the schema to the latest version.
 
-Currently only tested on MySQL and SQLite.
+Currently only tested on MySQL, Postgres, and SQLite.
 
 _
     args => {
