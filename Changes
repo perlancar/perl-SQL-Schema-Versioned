@@ -1,5 +1,14 @@
 Revision history for SHARYANTO-SQL-Schema
 
+0.03    2013-03-01 (SHARYANTO)
+
+        [INCOMPATIBLE CHANGES]
+
+        - Change 'sqls' argument (an array of SQL statement strings) to 'spec'
+          (a hash of series of SQL statement strings). This is so that we can
+          have/see 'install' which is the SQL statements for the latest version.
+
+
 0.02    2013-02-28 (SHARYANTO)
 
         - Add error handling for when upgrade fails.
