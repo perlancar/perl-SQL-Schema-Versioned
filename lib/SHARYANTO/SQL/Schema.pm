@@ -24,9 +24,9 @@ database schema for your application in a simple (and boring a.k.a. using plain
 SQL) way.
 
 *Version*: version is an integer and starts from 1. Each software release with
- schema change will bump the version number to 1. Version information is stored
- in a special table called `meta` (SELECT value FROM meta WHERE
- name='schema_version').
+schema change will bump the version number to 1. Version information is stored
+in a special table called `meta` (SELECT value FROM meta WHERE
+name='schema_version').
 
 You supply the SQL statements in `spec`. `spec` is a hash which contains the key
 `install` (the value of which is a series of SQL statements to create the schema
