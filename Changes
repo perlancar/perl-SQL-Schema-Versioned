@@ -1,5 +1,14 @@
 Revision history for SHARYANTO-SQL-Schema
 
+0.04    2013-03-14 (SHARYANTO)
+
+        [BUG FIXES]
+
+        - Put creating 'meta' table inside transaction, so if 'install' phase
+          fails, the meta table is not created (at least on Postgres which has
+          transactional DDL).
+
+
 0.03    2013-03-01 (SHARYANTO)
 
         [INCOMPATIBLE CHANGES]
