@@ -120,7 +120,9 @@ subtest "create (directly to v3, via install)" => sub {
     v_is(3);
 };
 
-# XXX should use postgres to test atomicity of upgrade
+# XXX failed install due to error in SQL, meta table not created, must use
+# postgres that does transactional DDL.
+
 subtest "failed upgrade 1->2 due to error in SQL" => sub {
     reset_db();
     my $spec = clone($spec0);

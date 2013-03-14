@@ -101,31 +101,8 @@ sub create_or_update_db_schema {
     if (@t) {
         ($v) = $dbh->selectrow_array(
             "SELECT value FROM meta WHERE name='schema_version'");
-    } else {
-        $dbh->begin_work;
-        $dbh->do("CREATE TABLE meta (name VARCHAR(64) NOT NULL PRIMARY KEY, value VARCHAR(255))")
-            or return [500, "Can't create table 'meta': " . $dbh->errstr];
-        $dbh->do("INSERT INTO meta (name,value) VALUES ('schema_version',0)")
-            or return [500, "Can't insert into 'meta': " . $dbh->errstr];
-        $dbh->commit;
-
-        if ($spec->{install}) {
-            $dbh->begin_work;
-            my $i = 0;
-            for my $sql (@{ $spec->{install} }) {
-                $dbh->do($sql) or return
-                    [500, "Failed executing install SQL #$i ($sql): ".$dbh->errstr];
-                $i++;
-            }
-            $dbh->do("UPDATE meta SET value=$spec->{latest_v} WHERE name='schema_version'")
-                or return [500, "Can't update 'meta': " . $dbh->errstr];
-            $dbh->commit;
-            return [200, "OK (installed)", {version=>$spec->{latest_v}}];
-        } else {
-            # perform upgrade from v1 .. latest
-            $v = 0;
-        }
     }
+    $v //= 0;
 
     my $orig_v = $v;
 
@@ -133,19 +110,43 @@ sub create_or_update_db_schema {
     # supports it like postgres)
     my $err;
 
-  UPGRADE:
+  STEP:
     for my $i (($v+1) .. $spec->{latest_v}) {
         undef $err;
-        $log->debug("Updating database schema from version $v to $i ...");
-        $spec->{"upgrade_to_v$i"} or return
-            [400, "Error in spec: upgrade_to_v$i not specified"];
+        my $last;
+
         $dbh->begin_work;
-        for my $sql (@{ $spec->{"upgrade_to_v$i"} }) {
-            $dbh->do($sql) or do { $err = $dbh->errstr; last UPGRADE };
+
+        if ($v == 0 && !@t) {
+            $dbh->do("CREATE TABLE meta (name VARCHAR(64) NOT NULL PRIMARY KEY, value VARCHAR(255))")
+                or do { $err = $dbh->errstr; last STEP };
+            $dbh->do("INSERT INTO meta (name,value) VALUES ('schema_version',0)")
+                or do { $err = $dbh->errstr; last STEP };
         }
-        $dbh->do("UPDATE meta SET value=$i WHERE name='schema_version'")
-            or do { $err = $dbh->errstr; last UPGRADE };
-        $dbh->commit or do { $err = $dbh->errstr; last UPGRADE };
+
+        if ($v == 0 && $spec->{install}) {
+            $log->debug("Updating database schema from version $v to $i ...");
+            my $j = 0;
+            for my $sql (@{ $spec->{install} }) {
+                $dbh->do($sql) or do { $err = $dbh->errstr; last STEP };
+                $i++;
+            }
+            $dbh->do("UPDATE meta SET value=$spec->{latest_v} WHERE name='schema_version'")
+                or do { $err = $dbh->errstr; last STEP };
+            $last++;
+        } else {
+            $log->debug("Updating database schema from version $v to $i ...");
+            $spec->{"upgrade_to_v$i"}
+                or do { $err = "Error in spec: upgrade_to_v$i not specified"; last STEP };
+            for my $sql (@{ $spec->{"upgrade_to_v$i"} }) {
+                $dbh->do($sql) or do { $err = $dbh->errstr; last STEP };
+            }
+            $dbh->do("UPDATE meta SET value=$i WHERE name='schema_version'")
+                or do { $err = $dbh->errstr; last STEP };
+        }
+
+        $dbh->commit or do { $err = $dbh->errstr; last STEP };
+
         $v = $i;
     }
     if ($err) {
