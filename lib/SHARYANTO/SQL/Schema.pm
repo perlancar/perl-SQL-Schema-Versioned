@@ -170,6 +170,18 @@ sub create_or_update_db_schema {
 
 This module uses L<Log::Any> for logging.
 
+To use this module, you typically run the create_or_update_db_schema() routine
+at the start of your program/script, e.g.:
+
+ use DBI;
+ use SHARYANTO::SQL::Schema qw(create_or_update_db_schema);
+ my $spec = {...}; # the schema specification
+ my $dbh = DBI->connect(...);
+ my $res = create_or_update_db_schema(dbh=>$dbh, spec=>$spec);
+
+This way, your program automatically creates/updates database schema when run.
+Users need not know anything.
+
 
 =head1 SEE ALSO
 
