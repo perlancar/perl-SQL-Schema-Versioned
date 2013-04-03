@@ -166,4 +166,24 @@ sub create_or_update_db_schema {
 1;
 # ABSTRACT: Routine and convention to create/update your application's DB schema
 
+=head1 DESCRIPTION
+
+This module uses L<Log::Any> for logging.
+
+
+=head1 SEE ALSO
+
+Some other database migration tools that directly uses SQL:
+
+=over
+
+=item * L<Database::Migrator>
+
+Pretty much similar, except that you put each version's SQL in a separate file
+and subdirectory. Perl scripts can also be executed for each version upgrade.
+Meta table is configurable (default recommended is 'AppliedMigrations'). You
+have to use OO style for using this.
+
+=back
+
 =cut
