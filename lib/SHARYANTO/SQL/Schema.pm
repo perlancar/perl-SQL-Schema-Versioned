@@ -191,10 +191,10 @@ Some other database migration tools that directly uses SQL:
 
 =item * L<Database::Migrator>
 
-Pretty much similar, except that you put each version's SQL in a separate file
-and subdirectory. Perl scripts can also be executed for each version upgrade.
-Meta table is configurable (default recommended is 'AppliedMigrations'). You
-have to use OO style for using this.
+Pretty much similar, albeit more fully-fledged/involved. You have to use OO
+style. You put each version's SQL in a separate file and subdirectory. Perl
+scripts can also be executed for each version upgrade. Meta table is
+configurable (default recommended is 'AppliedMigrations').
 
 =back
 

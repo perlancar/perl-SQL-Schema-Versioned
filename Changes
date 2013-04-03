@@ -1,5 +1,11 @@
 Revision history for SHARYANTO-SQL-Schema
 
+0.05    2013-04-03 (SHARYANTO)
+
+        No functional changes. doc: recommend Postgres, mention how to use the
+        module in a program/script, mention Database::Migrator in See Also.
+
+
 0.04    2013-03-14 (SHARYANTO)
 
         [BUG FIXES]
