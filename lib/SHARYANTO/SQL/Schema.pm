@@ -178,6 +178,8 @@ at the start of your program/script, e.g.:
  my $spec = {...}; # the schema specification
  my $dbh = DBI->connect(...);
  my $res = create_or_update_db_schema(dbh=>$dbh, spec=>$spec);
+ die "Cannot run the application: cannot create/upgrade database schema: $res->[1]"
+     unless $res->[0] == 200;
 
 This way, your program automatically creates/updates database schema when run.
 Users need not know anything.
