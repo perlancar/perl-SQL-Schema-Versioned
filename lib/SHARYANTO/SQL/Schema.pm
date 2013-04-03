@@ -33,9 +33,9 @@ You supply the SQL statements in `spec`. `spec` is a hash which contains the key
 from nothing). It should be the SQL statements to create the latest version of
 the schema.
 
-There should also be zero or more `upgrade_to_v$VER` keys, the value of each is
-a series of SQL statements to upgrade from ($VER-1) to $VER. So there could be
-`upgrade_to_v2`, `upgrade_to_v3`, and so on up the latest version.
+There should also be zero or more `upgrade_to_v$VERSION` keys, the value of each
+is a series of SQL statements to upgrade from ($VERSION-1) to $VERSION. So there
+could be `upgrade_to_v2`, `upgrade_to_v3`, and so on up the latest version.
 
 This routine will connect to database and check the current schema version. If
 `meta` table does not exist yet, the SQL statements in `install` will be
@@ -43,10 +43,13 @@ executed. The `meta` table will also be created and a row ('schema_version', 1)
 is added.
 
 If `meta` table already exists, schema version will be read from it and one or
-more series of SQL statements from `upgrade_to_v$VER` will be executed to bring
-the schema to the latest version.
+more series of SQL statements from `upgrade_to_v$VERSION` will be executed to
+bring the schema to the latest version.
 
-Currently only tested on MySQL, Postgres, and SQLite.
+Currently only tested on MySQL, Postgres, and SQLite. Postgres is recommended
+because it can do transactional DDL (a failed upgrade in the middle will not
+cause the database schema state to be inconsistent, e.g. in-between two
+versions).
 
 _
     args => {
