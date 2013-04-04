@@ -185,6 +185,15 @@ This way, your program automatically creates/updates database schema when run.
 Users need not know anything.
 
 
+=head1 FAQ
+
+=head2 How do I see each SQL statement as it is being executed?
+
+Try using L<Log::Any::For::DBI>, e.g.:
+
+ % TRACE=1 perl -MLog::Any::For::DBI -MLog::Any::App yourapp.pl ...
+
+
 =head1 SEE ALSO
 
 Some other database migration tools that directly uses SQL:
