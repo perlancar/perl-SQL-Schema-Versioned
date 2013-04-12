@@ -1,5 +1,11 @@
 Revision history for SHARYANTO-SQL-Schema
 
+0.08    2013-04-13 (SHARYANTO)
+
+        No functional changes. Add another FAQ item and mention more prior arts
+        (sqitch, DBIx::Migration).
+
+
 0.07    2013-04-12 (SHARYANTO)
 
         No functional changes. Add a couple of FAQ items.
