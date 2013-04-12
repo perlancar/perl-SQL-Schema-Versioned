@@ -24,7 +24,7 @@ database schema for your application in a simple (and boring a.k.a. using plain
 SQL) way.
 
 *Version*: version is an integer and starts from 1. Each software release with
-schema change will bump the version number to 1. Version information is stored
+schema change will bump the version number by 1. Version information is stored
 in a special table called `meta` (SELECT value FROM meta WHERE
 name='schema_version').
 
