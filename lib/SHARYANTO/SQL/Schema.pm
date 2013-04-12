@@ -20,8 +20,7 @@ $SPEC{create_or_update_db_schema} = {
     description => <<'_',
 
 With this routine (and some convention) you can easily create and update
-database schema for your application in a simple (and boring a.k.a. using plain
-SQL) way.
+database schema for your application in a simple way using pure SQL.
 
 *Version*: version is an integer and starts from 1. Each software release with
 schema change will bump the version number by 1. Version information is stored
@@ -204,6 +203,8 @@ Try using L<Log::Any::For::DBI>, e.g.:
 
 =item * Configurable meta table name?
 
+=item * Reversion/downgrade?
+
 =back
 
 
@@ -213,12 +214,22 @@ Some other database migration tools that directly uses SQL:
 
 =over
 
+=item * L<DBIx::Migration>
+
+Pretty much similar to this module, with support for downgrades. OO style, SQL
+in separate files/subdirectory.
+
 =item * L<Database::Migrator>
 
-Pretty much similar, albeit more fully-fledged/involved. You have to use OO
-style. You put each version's SQL in a separate file and subdirectory. Perl
-scripts can also be executed for each version upgrade. Meta table is
-configurable (default recommended is 'AppliedMigrations').
+Pretty much similar. OO style, SQL in separate files/subdirectory. Perl scripts
+can also be executed for each version upgrade. Meta table is configurable
+(default recommended is 'AppliedMigrations').
+
+=item * L<sqitch>
+
+A more proper database change management tool with dependency resolution and VCS
+awareness. No numbering. Command-line script and Perl library provided. Looks
+pretty awesome and something which I hope to use for more complex applications.
 
 =back
 
