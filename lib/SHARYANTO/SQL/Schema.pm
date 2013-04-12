@@ -187,6 +187,10 @@ Users need not know anything.
 
 =head1 FAQ
 
+=head2 Why the name SHARYANTO::*?
+
+I haven't decided on a better name. See L<SHARYANTO>.
+
 =head2 How do I see each SQL statement as it is being executed?
 
 Try using L<Log::Any::For::DBI>, e.g.:
