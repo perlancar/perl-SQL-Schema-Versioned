@@ -37,10 +37,10 @@ There should also be zero or more `upgrade_to_v$VERSION` keys, the value of each
 is a series of SQL statements to upgrade from ($VERSION-1) to $VERSION. So there
 could be `upgrade_to_v2`, `upgrade_to_v3`, and so on up the latest version.
 
-This routine will connect to database and check the current schema version. If
-`meta` table does not exist yet, the SQL statements in `install` will be
-executed. The `meta` table will also be created and a row ('schema_version', 1)
-is added.
+This routine will check the existence of the `meta` table and the current schema
+version. If `meta` table does not exist yet, the SQL statements in `install`
+will be executed. The `meta` table will also be created and a row
+('schema_version', 1) is added.
 
 If `meta` table already exists, schema version will be read from it and one or
 more series of SQL statements from `upgrade_to_v$VERSION` will be executed to
@@ -196,6 +196,15 @@ I haven't decided on a better name. See L<SHARYANTO>.
 Try using L<Log::Any::For::DBI>, e.g.:
 
  % TRACE=1 perl -MLog::Any::For::DBI -MLog::Any::App yourapp.pl ...
+
+
+=head1 TODO
+
+=over
+
+=item * Configurable meta table name?
+
+=back
 
 
 =head1 SEE ALSO
