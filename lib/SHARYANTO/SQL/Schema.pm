@@ -190,6 +190,12 @@ Users need not know anything.
 
 I haven't decided on a better name. See L<SHARYANTO>.
 
+=head2 Why use this module instead of other similar solution?
+
+Mainly simplicity. I write simple application which is often self-contained in a
+single module/script. This module works with embedded SQL statements instead of
+having to put SQL in separate files/subdirectory.
+
 =head2 How do I see each SQL statement as it is being executed?
 
 Try using L<Log::Any::For::DBI>, e.g.:
@@ -204,6 +210,8 @@ Try using L<Log::Any::For::DBI>, e.g.:
 =item * Configurable meta table name?
 
 =item * Reversion/downgrade?
+
+Something which does not come up often yet in my case.
 
 =back
 
