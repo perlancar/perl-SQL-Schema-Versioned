@@ -27,10 +27,10 @@ schema change will bump the version number by 1. Version information is stored
 in a special table called `meta` (SELECT value FROM meta WHERE
 name='schema_version').
 
-You supply the SQL statements in `spec`. `spec` is a hash which contains the key
-`install` (the value of which is a series of SQL statements to create the schema
-from nothing). It should be the SQL statements to create the latest version of
-the schema.
+You supply the SQL statements in `spec`. `spec` is a hash which at least must
+contain the key `latest_v` (an integer) and `install` (a series of SQL
+statements to create the schema from nothing). It should be the SQL statements
+to create the latest version of the schema.
 
 There should also be zero or more `upgrade_to_v$VERSION` keys, the value of each
 is a series of SQL statements to upgrade from ($VERSION-1) to $VERSION. So there
@@ -61,6 +61,8 @@ _
 Example:
 
     {
+        latest_v => 3,
+
         install => [
             'CREATE TABLE IF NOT EXISTS t1 (...)',
             'CREATE TABLE IF NOT EXISTS t2 (...)',
@@ -112,8 +114,17 @@ sub create_or_update_db_schema {
     # supports it like postgres)
     my $err;
 
+    my $latest_v = $spec->{latest_v};
+    if (!defined($latest_v)) {
+        $latest_v = 1;
+        for (keys %$spec) {
+            next unless /^upgrade_to_v(\d+)$/;
+            $latest_v = $1 if $1 > $latest_v;
+        }
+    }
+
   STEP:
-    for my $i (($v+1) .. $spec->{latest_v}) {
+    for my $i (($v+1) .. $latest_v) {
         undef $err;
         my $last;
 
@@ -133,7 +144,7 @@ sub create_or_update_db_schema {
                 $dbh->do($sql) or do { $err = $dbh->errstr; last STEP };
                 $i++;
             }
-            $dbh->do("UPDATE meta SET value=$spec->{latest_v} WHERE name='schema_version'")
+            $dbh->do("UPDATE meta SET value=$latest_v WHERE name='schema_version'")
                 or do { $err = $dbh->errstr; last STEP };
             $last++;
         } else {
