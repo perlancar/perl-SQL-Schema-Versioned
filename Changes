@@ -1,25 +1,32 @@
 Revision history for SHARYANTO-SQL-Schema
 
+0.09    2013-09-06 (SHARYANTO)
+
+        - Document that 'latest_v' is required in spec. On the other hand, ...
+
+        - Provide default for 'latest_v' if not specified in spec.
+
+
 0.08    2013-04-13 (SHARYANTO)
 
-        No functional changes. Add another FAQ item and mention more prior arts
-        (sqitch, DBIx::Migration).
+        - No functional changes. Add another FAQ item and mention more prior arts
+          (sqitch, DBIx::Migration).
 
 
 0.07    2013-04-12 (SHARYANTO)
 
-        No functional changes. Add a couple of FAQ items.
+        - No functional changes. Add a couple of FAQ items.
 
 
 0.06    2013-04-03 (SHARYANTO)
 
-        No functional changes. Fix incomplete example in Synopsis.
+        - No functional changes. Fix incomplete example in Synopsis.
 
 
 0.05    2013-04-03 (SHARYANTO)
 
-        No functional changes. doc: recommend Postgres, mention how to use the
-        module in a program/script, mention Database::Migrator in See Also.
+        - No functional changes. doc: recommend Postgres, mention how to use the
+          module in a program/script, mention Database::Migrator in See Also.
 
 
 0.04    2013-03-14 (SHARYANTO)
@@ -51,5 +58,4 @@ Revision history for SHARYANTO-SQL-Schema
 
 0.01    2013-02-28 (SHARYANTO)
 
-        First release.
-
+        - First release.
