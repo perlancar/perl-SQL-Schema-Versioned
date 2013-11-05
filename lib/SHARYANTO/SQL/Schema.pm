@@ -197,10 +197,6 @@ Users need not know anything.
 
 =head1 FAQ
 
-=head2 Why the name SHARYANTO::*?
-
-I haven't decided on a better name. See L<SHARYANTO>.
-
 =head2 Why use this module instead of other similar solution?
 
 Mainly simplicity. I write simple application which is often self-contained in a
@@ -228,6 +224,8 @@ Something which does not come up often yet in my case.
 
 
 =head1 SEE ALSO
+
+L<SHARYANTO>
 
 Some other database migration tools that directly uses SQL:
 
