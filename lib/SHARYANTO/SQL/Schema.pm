@@ -29,8 +29,8 @@ name='schema_version').
 
 You supply the SQL statements in `spec`. `spec` is a hash which at least must
 contain the key `latest_v` (an integer) and `install` (a series of SQL
-statements to create the schema from nothing). It should be the SQL statements
-to create the latest version of the schema.
+statements to create the schema from nothing; it should be the SQL statements to
+create the latest version of the schema).
 
 There should also be zero or more `upgrade_to_v$VERSION` keys, the value of each
 is a series of SQL statements to upgrade from ($VERSION-1) to $VERSION. So there
