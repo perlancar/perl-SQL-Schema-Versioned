@@ -36,6 +36,13 @@ There should also be zero or more `upgrade_to_v$VERSION` keys, the value of each
 is a series of SQL statements to upgrade from ($VERSION-1) to $VERSION. So there
 could be `upgrade_to_v2`, `upgrade_to_v3`, and so on up the latest version.
 
+There should also be one or more `install_vXXX` key (where `XXX` is an integer,
+the lowest version number that you still want to support) for testing. So, for
+example, if `latest_v` is 5 and you still want to support from version 2, you
+should have an `install_v2` key containing a series of SQL statements to create
+the schema at version 2), and `upgrade_to_v3`, `upgrade_to_v4`, `upgrade_to_v5`.
+This way migrations from v2 to v3, v3 to v4, and v4 to v5 can be tested.
+
 This routine will check the existence of the `meta` table and the current schema
 version. If `meta` table does not exist yet, the SQL statements in `install`
 will be executed. The `meta` table will also be created and a row
@@ -227,7 +234,7 @@ Something which does not come up often yet in my case.
 
 L<SHARYANTO>
 
-Some other database migration tools that directly uses SQL:
+Some other database migration tools on CPAN:
 
 =over
 
