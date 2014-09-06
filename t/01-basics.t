@@ -1,4 +1,4 @@
-#!perl -T
+#!perl
 
 use 5.010;
 use strict;
@@ -53,6 +53,12 @@ my $spec0 = {
     ],
     upgrade_to_v3 => [
         "DROP TABLE t2",
+    ],
+
+    install_v2 => [
+        "CREATE TABLE t1 (i INT)",
+        "CREATE TABLE t2 (i INT)",
+        "CREATE TABLE t4 (i INT)",
     ],
 };
 my $sqls;
@@ -116,6 +122,15 @@ subtest "create (directly to v3, via install)" => sub {
     reset_db();
     my $spec = clone($spec0);
     create_or_update_db_schema(dbh => $dbh, spec => $spec);
+    table_exists(qw/t1 t4/); table_not_exists(qw/t2 t3/);
+    v_is(3);
+};
+
+subtest "create from v2 (via create_from_version option)" => sub {
+    reset_db();
+    my $spec = clone($spec0);
+    create_or_update_db_schema(dbh => $dbh, spec => $spec,
+                               create_from_version=>2);
     table_exists(qw/t1 t4/); table_not_exists(qw/t2 t3/);
     v_is(3);
 };
