@@ -1,5 +1,12 @@
 Revision history for SHARYANTO-SQL-Schema
 
+0.10    2014-09-06 (PERLANCAR)
+
+        - Allow creating from an earlier version using 'install_v<VERSION>' in
+          the spec and set option 'create_from_version' => <VERSION> when
+          calling the function. This is useful for testing database migration.
+
+
 0.09    2013-09-06 (SHARYANTO)
 
         - Document that 'latest_v' is required in spec. On the other hand, ...
