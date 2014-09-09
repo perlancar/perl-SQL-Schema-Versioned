@@ -1,5 +1,12 @@
 Revision history for SQL-Schema-Versioned
 
+0.11    2014-09-09 (PERLANCAR)
+
+	- No functional changes.
+
+	- Rename dist from SHARYANTO-SQL-Schema to SQL-Schema-Versioned.
+
+
 0.10    2014-09-06 (PERLANCAR)
 
         - Allow creating from an earlier version using 'install_v<VERSION>' in
