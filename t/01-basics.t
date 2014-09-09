@@ -8,7 +8,7 @@ use Data::Clone;
 use DBI;
 use File::chdir;
 use File::Temp qw(tempdir);
-use SHARYANTO::SQL::Schema qw(create_or_update_db_schema);
+use SQL::Schema::Versioned qw(create_or_update_db_schema);
 use Test::More 0.98;
 
 my $dir = tempdir(CLEANUP => 1);

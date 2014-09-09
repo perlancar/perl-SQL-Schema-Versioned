@@ -1,4 +1,4 @@
-package SHARYANTO::SQL::Schema;
+package SQL::Schema::Versioned;
 
 # DATE
 # VERSION
@@ -245,7 +245,7 @@ To use this module, you typically run the create_or_update_db_schema() routine
 at the start of your program/script, e.g.:
 
  use DBI;
- use SHARYANTO::SQL::Schema qw(create_or_update_db_schema);
+ use SQL::Schema::Versioned qw(create_or_update_db_schema);
  my $spec = {...}; # the schema specification
  my $dbh = DBI->connect(...);
  my $res = create_or_update_db_schema(dbh=>$dbh, spec=>$spec);
@@ -285,8 +285,6 @@ Something which does not come up often yet in my case.
 
 
 =head1 SEE ALSO
-
-L<SHARYANTO>
 
 Some other database migration tools on CPAN:
 
