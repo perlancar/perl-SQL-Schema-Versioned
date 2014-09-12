@@ -16,16 +16,16 @@ $CWD = $dir;
 my $dbh;
 
 sub connect_db {
-    my ($ds, $user, $pass);
-    if ($ds = $ENV{TEST_DBI_DSN}) {
+    my ($dsn, $user, $pass);
+    if ($dsn = $ENV{TEST_DBI_DSN}) {
         $user = $ENV{TEST_DBI_USER};
         $pass = $ENV{TEST_DBI_PASS};
     } else {
-        $ds = "dbi:SQLite:$dir/db.db";
+        $dsn = "dbi:SQLite:$dir/db.db";
         $user = "";
         $pass = "";
     }
-    $dbh = DBI->connect($ds, $user, $pass, {RaiseError=>1});
+    $dbh = DBI->connect($dsn, $user, $pass, {RaiseError=>1});
 }
 
 sub reset_db {
