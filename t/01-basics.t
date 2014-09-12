@@ -17,7 +17,7 @@ my $dbh;
 
 sub connect_db {
     my ($ds, $user, $pass);
-    if ($ds = $ENV{TEST_DBI_DS}) {
+    if ($ds = $ENV{TEST_DBI_DSN}) {
         $user = $ENV{TEST_DBI_USER};
         $pass = $ENV{TEST_DBI_PASS};
     } else {
