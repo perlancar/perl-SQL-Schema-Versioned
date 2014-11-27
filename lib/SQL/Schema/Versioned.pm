@@ -239,8 +239,6 @@ sub create_or_update_db_schema {
 
 =head1 DESCRIPTION
 
-This module uses L<Log::Any> for logging.
-
 To use this module, you typically run the create_or_update_db_schema() routine
 at the start of your program/script, e.g.:
 
