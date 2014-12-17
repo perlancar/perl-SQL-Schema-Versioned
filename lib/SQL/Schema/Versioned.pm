@@ -235,7 +235,7 @@ sub create_or_update_db_schema {
 }
 
 1;
-# ABSTRACT: Routine and convention to create/update your application's DB schema
+# ABSTRACT:
 
 =head1 DESCRIPTION
 
