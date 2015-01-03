@@ -269,19 +269,6 @@ Try using L<Log::Any::For::DBI>, e.g.:
  % TRACE=1 perl -MLog::Any::For::DBI -MLog::Any::App yourapp.pl ...
 
 
-=head1 TODO
-
-=over
-
-=item * Configurable meta table name?
-
-=item * Reversion/downgrade?
-
-Something which does not come up often yet in my case.
-
-=back
-
-
 =head1 SEE ALSO
 
 Some other database migration tools on CPAN:
