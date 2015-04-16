@@ -158,6 +158,14 @@ sub create_or_update_db_schema {
         }
     }
 
+    # sanity check, if current database schema version is newer then the spec,
+    # then the code is probably older
+    if ($current_v > $latest_v) {
+        die "Database schema version ($current_v) is newer than the spec's ".
+            "latest version ($latest_v), you probably need to upgrade ".
+            "the application first\n";
+    }
+
   STEP:
     while (1) {
         last if $current_v >= $latest_v;
