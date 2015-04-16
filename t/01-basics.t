@@ -9,6 +9,7 @@ use DBI;
 use File::chdir;
 use File::Temp qw(tempdir);
 use SQL::Schema::Versioned qw(create_or_update_db_schema);
+use Test::Exception;
 use Test::More 0.98;
 
 my $dir = tempdir(CLEANUP => 1);
@@ -116,6 +117,14 @@ subtest "upgrade to v3" => sub {
     create_or_update_db_schema(dbh => $dbh, spec => $spec);
     table_exists(qw/t1 t4/); table_not_exists(qw/t2 t3/);
     v_is(3);
+};
+
+subtest "sanity check: db version > spec latest version" => sub {
+    reset_db();
+    my $spec = clone($spec0);
+    create_or_update_db_schema(dbh => $dbh, spec => $spec);
+    $dbh->do("UPDATE meta SET value=4 WHERE name='schema_version'");
+    dies_ok { create_or_update_db_schema(dbh => $dbh, spec => $spec) };
 };
 
 subtest "create (directly to v3, via install)" => sub {
