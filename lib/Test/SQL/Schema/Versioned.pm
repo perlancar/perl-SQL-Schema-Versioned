@@ -21,6 +21,7 @@ sub sql_schema_spec_ok {
     my ($spec, $twdb) = @_;
 
     subtest "sql schema spec test" => sub {
+        # some sanity checks
         is(ref($spec), 'HASH', 'spec is a hash') or return;
         ok($spec->{latest_v} >= 1, 'latest_v >= 1') or return;
         ok($spec->{install}, 'has install') or return;
@@ -30,7 +31,10 @@ sub sql_schema_spec_ok {
 
         subtest "testing schema creation using install" => sub {
             my $dbh = $twdb->create_db;
-            lives_ok { create_or_update_db_schema(dbh=>$dbh, spec=>$spec) };
+            lives_ok {
+                my $res = create_or_update_db_schema(dbh=>$dbh, spec=>$spec);
+                is($res->[0], 200, 'create/update status') or diag explain $res;
+            };
         };
 
         subtest "testing schema upgrade from v1" => sub {
@@ -38,9 +42,14 @@ sub sql_schema_spec_ok {
             lives_ok {
                 local $spec->{install} = $spec->{install_v1};
                 local $spec->{latest_v} = 1;
-                create_or_update_db_schema(dbh=>$dbh, spec=>$spec);
+                my $res = create_or_update_db_schema(dbh=>$dbh, spec=>$spec);
+                is($res->[0], 200, 'create/update status') or diag explain $res;
             } "create with install_v1";
-            lives_ok { create_or_update_db_schema(dbh=>$dbh, spec=>$spec) };
+
+            lives_ok {
+                my $res = create_or_update_db_schema(dbh=>$dbh, spec=>$spec);
+                is($res->[0], 200, 'create/update status') or diag explain $res;
+            };
         } if $spec->{latest_v} > 1;
     };
 }
