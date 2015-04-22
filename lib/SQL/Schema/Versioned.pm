@@ -277,6 +277,13 @@ Try using L<Log::Any::For::DBI>, e.g.:
  % TRACE=1 perl -MLog::Any::For::DBI -MLog::Any::App yourapp.pl ...
 
 
+=head1 BEST PRACTICES
+
+It is recommended that after you create the second and subsequent version
+(C<upgrade_to_v2>, C<upgrade_to_v3>, and so on) you create and keep
+C<install_v1> so you can test migration from v1->v2, v2->v3, and so on.
+
+
 =head1 SEE ALSO
 
 Some other database migration tools on CPAN:
