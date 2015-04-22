@@ -59,6 +59,7 @@ sub sql_schema_spec_ok {
 
 =head1 FUNCTIONS
 
-=head2 sql_schema_spec_ok($spec[ , $twdb ])
+=head2 sql_schema_spec_ok($spec, $twdb)
 
-Test C<$spec>. C<$twdb> is an instance of L<Test::WithDB>.
+Test C<$spec>. C<$twdb> is an instance of L<Test::WithDB> (e.g. Test::WithDB
+itself or L<Test::WithDB::SQLite>).
