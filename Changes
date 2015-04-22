@@ -1,5 +1,11 @@
 Revision history for SQL-Schema-Versioned
 
+0.16    2015-04-22 (PERLANCAR)
+
+	- sql_schema_spec_ok(): Test return value from
+	  create_or_update_db_schema().
+
+
 0.15    2015-04-22 (PERLANCAR)
 
 	- Add module: Test::SQL::Schema::Versioned.
