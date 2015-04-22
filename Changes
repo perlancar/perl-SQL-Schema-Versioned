@@ -1,5 +1,14 @@
 Revision history for SQL-Schema-Versioned
 
+0.15    2015-04-22 (PERLANCAR)
+
+	- Add module: Test::SQL::Schema::Versioned.
+
+	- Add test for sanity check.
+
+	- Replace Log::Any with Log::Any::IfLOG.
+
+
 0.14    2015-04-16 (PERLANCAR)
 
 	- Add sanity check for when current_v > latest_v.
