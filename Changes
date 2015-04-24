@@ -1,5 +1,13 @@
 Revision history for SQL-Schema-Versioned
 
+0.17    2015-04-24 (PERLANCAR)
+
+	- Test database schemas are equal between one created directly with
+	  latest version's SQL vs upgraded from v1.
+
+	- [doc] Fix documentation: twdb argument is required not optional.
+
+
 0.16    2015-04-22 (PERLANCAR)
 
 	- sql_schema_spec_ok(): Test return value from
