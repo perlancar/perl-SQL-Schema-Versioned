@@ -36,7 +36,7 @@ sub sql_schema_spec_ok {
             lives_ok {
                 my $res = create_or_update_db_schema(dbh=>$dbh1, spec=>$spec);
                 is($res->[0], 200, 'create/update status') or diag explain $res;
-            };
+            } "create latest v";
         };
 
         my $dbh2;
@@ -52,7 +52,7 @@ sub sql_schema_spec_ok {
             lives_ok {
                 my $res = create_or_update_db_schema(dbh=>$dbh2, spec=>$spec);
                 is($res->[0], 200, 'create/update status') or diag explain $res;
-            };
+            } "upgrade from v1 to latest";
         } if $spec->{latest_v} > 1;
 
         my $diff = diff_db_schema($dbh1, $dbh2);
