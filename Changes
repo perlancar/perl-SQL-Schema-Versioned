@@ -1,5 +1,12 @@
 Revision history for SQL-Schema-Versioned
 
+0.19    2015-04-30 (PERLANCAR)
+
+	- No functional changes.
+
+	- [doc] Clearer code in example.
+
+
 0.18    2015-04-29 (PERLANCAR)
 
 	- Allow an install/upgrade step to contain coderef, which will be
