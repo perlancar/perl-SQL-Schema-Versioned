@@ -1,5 +1,11 @@
 Revision history for SQL-Schema-Versioned
 
+0.18    2015-04-29 (PERLANCAR)
+
+	- Allow an install/upgrade step to contain coderef, which will be
+	  called with $dbh as argument.
+
+
 0.17    2015-04-24 (PERLANCAR)
 
 	- Test database schemas are equal between one created directly with
