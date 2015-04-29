@@ -88,14 +88,14 @@ Example:
         upgrade_to_v2 => [
             'ALTER TABLE t1 ADD COLUMN c5 INT NOT NULL',
             sub {
-                # this subroutine sets the values of c5
+                # this subroutine sets the values of c5 for the whole table
                 my $dbh = shift;
                 my $sth_sel = $dbh->prepare("SELECT c1 FROM t1");
                 my $sth_upd = $dbh->prepare("UPDATE t1 SET c5=? WHERE c1=?");
                 $sth_sel->execute;
-                while (my @row = $sth_sel->fetchrow_array) {
-                    my $val = ...; # calculate c5
-                    $sth_upd->execute($val, $row[0]);
+                while (my ($c1) = $sth_sel->fetchrow_array) {
+                    my $c5 = ...; # calculate c5 value for the row
+                    $sth_upd->execute($c5, $c1);
                 }
             },
             'CREATE UNIQUE INDEX i1 ON t2(c1)',
