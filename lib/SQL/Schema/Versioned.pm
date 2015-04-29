@@ -47,6 +47,9 @@ statements to create the schema at version 2, and `upgrade_to_v3`,
 `upgrade_to_v4`, `upgrade_to_v5` keys. This way migrations from v2 to v3, v3 to
 v4, and v4 to v5 can be tested.
 
+You can name `install_v1` key as `upgrade_to_v1` (to upgrade from 'nothing'
+a.k.a. v0 to v1), which is basically the same thing.
+
 This routine will check the existence of the `meta` table and the current schema
 version. If `meta` table does not exist yet, the SQL statements in `install`
 will be executed. The `meta` table will also be created and a row
