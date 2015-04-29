@@ -96,6 +96,8 @@ sub v_is {
 connect_db();
 reset_db();
 
+# XXX fail install due to error in coderef
+
 subtest "create (v1)" => sub {
     my $spec = clone($spec0);
     delete $spec->{install}; $spec->{latest_v} = 1;
@@ -135,6 +137,15 @@ subtest "create (directly to v3, via install)" => sub {
     v_is(3);
 };
 
+subtest "create (directly to v3, via install, +coderef)" => sub {
+    reset_db();
+    my $spec = clone($spec0);
+    push @{ $spec->{install} }, sub { 1 };
+    create_or_update_db_schema(dbh => $dbh, spec => $spec);
+    table_exists(qw/t1 t4/); table_not_exists(qw/t2 t3/);
+    v_is(3);
+};
+
 subtest "create from v2 (via create_from_version option)" => sub {
     reset_db();
     my $spec = clone($spec0);
@@ -161,6 +172,16 @@ subtest "failed upgrade 2->3 due to error in SQL" => sub {
     reset_db();
     my $spec = clone($spec0);
     delete $spec->{install}; $spec->{upgrade_to_v3} = ['blah'];
+    my $res = create_or_update_db_schema(dbh => $dbh, spec => $spec);
+    diag explain $res;
+    is($res->[0], 500, "res");
+    table_exists(qw/t1 t2 t4/); table_not_exists(qw/t3/);
+    v_is(2);
+};
+subtest "failed upgrade 2->3 due to error in coderef" => sub {
+    reset_db();
+    my $spec = clone($spec0);
+    delete $spec->{install}; $spec->{upgrade_to_v3} = [sub{die}];
     my $res = create_or_update_db_schema(dbh => $dbh, spec => $spec);
     diag explain $res;
     is($res->[0], 500, "res");

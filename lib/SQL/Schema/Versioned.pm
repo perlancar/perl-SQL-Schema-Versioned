@@ -56,6 +56,10 @@ If `meta` table already exists, schema version will be read from it and one or
 more series of SQL statements from `upgrade_to_v$VERSION` will be executed to
 bring the schema to the latest version.
 
+Aside from SQL statement, the series can also contain coderefs for more complex
+upgrade process. Each coderef will be called with `$dbh` as argument and must
+not die (so to signify failure, you can die from inside the coderef).
+
 Currently only tested on MySQL, Postgres, and SQLite. Postgres is recommended
 because it can do transactional DDL (a failed upgrade in the middle will not
 cause the database schema state to be inconsistent, e.g. in-between two
@@ -83,6 +87,17 @@ Example:
 
         upgrade_to_v2 => [
             'ALTER TABLE t1 ADD COLUMN c5 INT NOT NULL',
+            sub {
+                # this subroutine sets the values of c5
+                my $dbh = shift;
+                my $sth_sel = $dbh->prepare("SELECT c1 FROM t1");
+                my $sth_upd = $dbh->prepare("UPDATE t1 SET c5=? WHERE c1=?");
+                $sth_sel->execute;
+                while (my @row = $sth_sel->fetchrow_array) {
+                    my $val = ...; # calculate c5
+                    $sth_upd->execute($val, $row[0]);
+                }
+            },
             'CREATE UNIQUE INDEX i1 ON t2(c1)',
         ],
 
@@ -186,8 +201,12 @@ sub create_or_update_db_schema {
                 # install from a specific version
                 if ($spec->{"install_v$from_v"}) {
                     $log->debug("Creating version $from_v of database schema ...");
-                    for my $sql (@{ $spec->{"install_v$from_v"} }) {
-                        $dbh->do($sql) or do { $err = $dbh->errstr; last STEP };
+                    for my $step (@{ $spec->{"install_v$from_v"} }) {
+                        if (ref($step) eq 'CODE') {
+                            eval { $step->($dbh) }; if ($@) { $err = $@; last STEP }
+                        } else {
+                            $dbh->do($step) or do { $err = $dbh->errstr; last STEP };
+                        }
                     }
                     $dbh->do("UPDATE meta SET value=$from_v WHERE name='schema_version'")
                         or do { $err = $dbh->errstr; last STEP };
@@ -202,8 +221,12 @@ sub create_or_update_db_schema {
                 # install directly the latest version
                 if ($spec->{install}) {
                     $log->debug("Creating latest version of database schema ...");
-                    for my $sql (@{ $spec->{install} }) {
-                        $dbh->do($sql) or do { $err = $dbh->errstr; last STEP };
+                    for my $step (@{ $spec->{install} }) {
+                        if (ref($step) eq 'CODE') {
+                            eval { $step->($dbh) }; if ($@) { $err = $@; last STEP }
+                        } else {
+                            $dbh->do($step) or do { $err = $dbh->errstr; last STEP };
+                        }
                     }
                     $dbh->do("UPDATE meta SET value=$latest_v WHERE name='schema_version'")
                         or do { $err = $dbh->errstr; last STEP };
@@ -225,8 +248,12 @@ sub create_or_update_db_schema {
         $log->debug("Updating database schema from version $current_v to $next_v ...");
         $spec->{"upgrade_to_v$next_v"}
             or do { $err = "Error in spec: upgrade_to_v$next_v not specified"; last STEP };
-        for my $sql (@{ $spec->{"upgrade_to_v$next_v"} }) {
-            $dbh->do($sql) or do { $err = $dbh->errstr; last STEP };
+        for my $step (@{ $spec->{"upgrade_to_v$next_v"} }) {
+            if (ref($step) eq 'CODE') {
+                eval { $step->($dbh) }; if ($@) { $err = $@; last STEP }
+            } else {
+                $dbh->do($step) or do { $err = $dbh->errstr; last STEP };
+            }
         }
         $dbh->do("UPDATE meta SET value=$next_v WHERE name='schema_version'")
             or do { $err = $dbh->errstr; last STEP };
