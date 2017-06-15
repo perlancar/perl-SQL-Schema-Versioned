@@ -53,11 +53,10 @@ sub sql_schema_spec_ok {
                 my $res = create_or_update_db_schema(dbh=>$dbh2, spec=>$spec);
                 is($res->[0], 200, 'create/update status') or diag explain $res;
             } "upgrade from v1 to latest";
+            my $diff = diff_db_schema($dbh1, $dbh2);
+            is_deeply($diff, {}, 'create from scratch vs upgrade from v1 results in the same database schema')
+                or diag explain $diff;
         } if $spec->{latest_v} > 1;
-
-        my $diff = diff_db_schema($dbh1, $dbh2);
-        is_deeply($diff, {}, 'create from scratch vs upgrade from v1 results in the same database schema')
-            or diag explain $diff;
     };
 }
 
