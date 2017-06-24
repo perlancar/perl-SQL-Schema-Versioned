@@ -6,7 +6,7 @@ package SQL::Schema::Versioned;
 use 5.010001;
 use strict;
 use warnings;
-use Log::Any::IfLOG '$log';
+use Log::ger;
 
 use Exporter;
 our @ISA = qw(Exporter);
@@ -203,7 +203,7 @@ sub create_or_update_db_schema {
             if ($from_v) {
                 # install from a specific version
                 if ($spec->{"install_v$from_v"}) {
-                    $log->debug("Creating version $from_v of database schema ...");
+                    log_debug("Creating version $from_v of database schema ...");
                     for my $step (@{ $spec->{"install_v$from_v"} }) {
                         if (ref($step) eq 'CODE') {
                             eval { $step->($dbh) }; if ($@) { $err = $@; last STEP }
@@ -223,7 +223,7 @@ sub create_or_update_db_schema {
             } else {
                 # install directly the latest version
                 if ($spec->{install}) {
-                    $log->debug("Creating latest version of database schema ...");
+                    log_debug("Creating latest version of database schema ...");
                     for my $step (@{ $spec->{install} }) {
                         if (ref($step) eq 'CODE') {
                             eval { $step->($dbh) }; if ($@) { $err = $@; last STEP }
@@ -248,7 +248,7 @@ sub create_or_update_db_schema {
 
       UPGRADE:
         my $next_v = $current_v + 1;
-        $log->debug("Updating database schema from version $current_v to $next_v ...");
+        log_debug("Updating database schema from version $current_v to $next_v ...");
         $spec->{"upgrade_to_v$next_v"}
             or do { $err = "Error in spec: upgrade_to_v$next_v not specified"; last STEP };
         for my $step (@{ $spec->{"upgrade_to_v$next_v"} }) {
@@ -264,7 +264,7 @@ sub create_or_update_db_schema {
         $current_v = $next_v;
     }
     if ($err) {
-        $log->error("Can't upgrade schema (from version $orig_v): $err");
+        log_error("Can't upgrade schema (from version $orig_v): $err");
         $dbh->rollback;
         return [500, "Can't upgrade schema (from version $orig_v): $err"];
     } else {
