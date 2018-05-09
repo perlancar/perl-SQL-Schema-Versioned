@@ -8,8 +8,7 @@ use strict;
 use warnings;
 use Log::ger;
 
-use Exporter;
-our @ISA = qw(Exporter);
+use Exporter qw(import);
 our @EXPORT_OK = qw(
                        create_or_update_db_schema
                );
@@ -311,10 +310,12 @@ sub create_or_update_db_schema {
             @provides = _extract_created_tables_from_sql_statements(
                 @{ $spec->{install} });
         } else {
-            return [
-                412, "Both `provides` and `install` spec are not ".
-                    "specified, can't get list of tables managed by ".
-                    "this component"];
+            if ($comp ne 'main') {
+                return [
+                    412, "Both `provides` and `install` spec are not ".
+                        "specified, can't get list of tables managed by ".
+                        "this component"];
+            }
         }
     }
 

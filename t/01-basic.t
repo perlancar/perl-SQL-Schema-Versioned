@@ -101,7 +101,8 @@ reset_db();
 subtest "create (v1)" => sub {
     my $spec = clone($spec0);
     delete $spec->{install}; $spec->{latest_v} = 1;
-    create_or_update_db_schema(dbh => $dbh, spec => $spec);
+    my $res = create_or_update_db_schema(dbh => $dbh, spec => $spec);
+    is($res->[0], 200) or diag explain $res;
     table_exists(qw/t1 t2 t3/); table_not_exists(qw/t4/);
     v_is(1);
 };

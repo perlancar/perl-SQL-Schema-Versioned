@@ -43,6 +43,7 @@ subtest "missing install/provides" => sub {
     reset_db();
 
     my $spec = {
+        component_name => 'c1',
         latest_v => 2,
         install_v1 => [],
         upgrade_to_v2 => [],

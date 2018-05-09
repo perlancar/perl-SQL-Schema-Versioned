@@ -1,5 +1,7 @@
 package Test::SQL::Schema::Versioned;
 
+## no critic (Modules::ProhibitAutomaticExportation)
+
 # DATE
 # VERSION
 
