@@ -111,8 +111,7 @@ because it can do transactional DDL (a failed upgrade in the middle will not
 cause the database schema state to be inconsistent, e.g. in-between two
 versions).
 
-Modular schema (components)
-===========================
+*Modular schema (components)*
 
 This routine supports so-called modular schema, where you can separate your
 database schema into several *components* (sets of tables) and then declare
@@ -121,9 +120,9 @@ dependencies among them.
 For example, say you are writing a stock management application. You divide your
 application into several components: `quote` (component that deals with
 importing stock quotes and querying stock prices), `portfolio` (component that
-computing the market value of your portfolio, calculating gains/losses), `trade`
-(component that connects to your broker API and perform trading by submitting
-buy/sell orders).
+deals with computing the market value of your portfolio, calculating
+gains/losses), `trade` (component that connects to your broker API and perform
+trading by submitting buy/sell orders).
 
 The `quote` application component manages these tables: `daily_price`,
 `spot_price`. The `portfolio` application component manages these tables:
@@ -137,7 +136,7 @@ from the `daily_price` e.g. to calculate 52-week momentum, and writes to the
 `spot_price` to record intraday prices, and reads/writes from the `account` and
 `balance` tables. Here are the `spec`s for each component:
 
-    # spec for the `price` application component
+    # spec for the price application component
     {
         component_name => 'price',
         latest_v => 1,
@@ -146,7 +145,7 @@ from the `daily_price` e.g. to calculate 52-week momentum, and writes to the
         ...
     }
 
-    # spec for the `portfolio` application component
+    # spec for the portfolio application component
     {
         component_name => 'portfolio',
         latest_v => 1,
@@ -159,9 +158,9 @@ from the `daily_price` e.g. to calculate 52-week momentum, and writes to the
         ...
     }
 
-    # spec for the `portfolio` application component
+    # spec for the `trade` application component
     {
-        component_name => 'portfolio',
+        component_name => 'trade',
         latest_v => 1,
         provides => ['order'],
         deps => {
@@ -174,7 +173,7 @@ from the `daily_price` e.g. to calculate 52-week momentum, and writes to the
         ...
     }
 
-You'll notice that the two keys new here are the `component_name`, `provides`,
+You'll notice that the three keys new here are the `component_name`, `provides`,
 and `deps`.
 
 When `component_name` is set, then instead of the `schema_version` key in the
@@ -519,6 +518,7 @@ routine at the start of your program/script, e.g.:
 
 This way, your program automatically creates/updates database schema when run.
 Users need not know anything.
+
 
 =head1 FAQ
 
