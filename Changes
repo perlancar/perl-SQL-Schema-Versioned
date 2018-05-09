@@ -1,11 +1,16 @@
-0.231   2018-05-09 (PERLANCAR)
+0.232   2018-05-09 (PERLANCAR)
+
+	- [Bugfix] Fix improper commit introduced in 0.230.
+
+
+0.231   2018-05-09 (PERLANCAR) (UPDATE: this release is broken)
 
 	- No functional changes.
 
         - [doc] Fix documentation typos & formatting.
 
 
-0.230   2018-05-09 (PERLANCAR)
+0.230   2018-05-09 (PERLANCAR) (UPDATE: this release is broken)
 
 	- Introduce component support.
 
