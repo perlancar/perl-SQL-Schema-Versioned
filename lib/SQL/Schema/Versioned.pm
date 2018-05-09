@@ -111,7 +111,7 @@ because it can do transactional DDL (a failed upgrade in the middle will not
 cause the database schema state to be inconsistent, e.g. in-between two
 versions).
 
-*Modular schema (components)*
+### Modular schema (components)
 
 This routine supports so-called modular schema, where you can separate your
 database schema into several *components* (sets of tables) and then declare
