@@ -158,7 +158,7 @@ from the `daily_price` e.g. to calculate 52-week momentum, and writes to the
         ...
     }
 
-    # spec for the `trade` application component
+    # spec for the trade application component
     {
         component_name => 'trade',
         latest_v => 1,
