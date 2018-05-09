@@ -366,7 +366,6 @@ sub create_or_update_db_schema {
 
     # perform schema upgrade atomically per version (at least for db that
     # supports atomic DDL like postgres)
-    my $err;
 
     my $latest_v = $spec->{latest_v};
     if (!defined($latest_v)) {
@@ -377,127 +376,163 @@ sub create_or_update_db_schema {
         }
     }
 
-    # sanity check, if current database schema version is newer then the spec,
-    # then the code is probably older
     if ($current_v > $latest_v) {
         die "Database schema version ($current_v) is newer than the spec's ".
             "latest version ($latest_v), you probably need to upgrade ".
             "the application first\n";
     }
 
+    my $code_update_provides = sub {
+        my @k;
+        for my $t (sort keys %provides) {
+            my $prov = $provides{$t};
+            next unless $prov->[0] eq $comp;
+            delete $provides{$t};
+            push @k, "table.$t";
+        }
+        if (@k) {
+            $dbh->do("DELETE FROM meta WHERE name IN (".
+                         join(",", map { $dbh->quote($_) } @k).")")
+                or return $dbh->errstr;
+        }
+        for my $t (@provides) {
+            $provides{$t} = [$comp, $latest_v];
+            $dbh->do("INSERT INTO meta (name, value) VALUES (?, ?)",
+                     {},
+                     "table.$t",
+                     "$comp:$latest_v",
+                 ) or return $dbh->errstr;
+        }
+        # success
+        "";
+    };
+
+    my $begun;
+    my $res;
+
+    my $db_state = 'committed';
+
   SETUP:
-    {
+    while (1) {
+        log_trace "tmp: current_v=$current_v";
+        last if $current_v >= $latest_v;
+
+        # we should only begin writing to the database from this step, because
+        # we want to do things atomically (when the database supports it). when
+        # we want to bail out, we don't return() directly but set $res and last
+        # SETUP so we can rollback.
         $dbh->begin_work;
+        $db_state = 'begun';
 
-      INSTALL_OR_UPGRADE_STEP:
-        while (1) {
-            last if $current_v >= $latest_v;
+        # install
+        if ($current_v == 0) {
+            # create 'meta' table if not exists
+            unless (@has_meta_table) {
+                $dbh->do("CREATE TABLE meta (name VARCHAR(64) NOT NULL PRIMARY KEY, value VARCHAR(255))")
+                    or do { $res = [500, "Couldn't create meta table: ".$dbh->errstr]; last SETUP };
+                $dbh->do("INSERT INTO meta (name,value) VALUES ('$sv_key',0)")
+                    or do { $res = [500, "Couldn't insert to meta table: ".$dbh->errstr]; last SETUP };
+            }
 
-            # install
-            if ($current_v == 0) {
-                # create 'meta' table if not exists
-                unless (@has_meta_table) {
-                    $dbh->do("CREATE TABLE meta (name VARCHAR(64) NOT NULL PRIMARY KEY, value VARCHAR(255))")
-                        or do { $err = $dbh->errstr; last INSTALL_OR_UPGRADE_STEP };
-                    $dbh->do("INSERT INTO meta (name,value) VALUES ('$sv_key',0)")
-                        or do { $err = $dbh->errstr; last INSTALL_OR_UPGRADE_STEP };
-                }
-
-                if ($from_v) {
-                    # install from a specific version
-                    if ($spec->{"install_v$from_v"}) {
-                        log_debug("Creating version $from_v of database schema ...");
-                        for my $step (@{ $spec->{"install_v$from_v"} }) {
-                            if (ref($step) eq 'CODE') {
-                                eval { $step->($dbh) }; if ($@) { $err = $@; last INSTALL_OR_UPGRADE_STEP }
-                            } else {
-                                $dbh->do($step) or do { $err = $dbh->errstr; last INSTALL_OR_UPGRADE_STEP };
-                            }
+            if ($from_v) {
+                # install from a specific version
+                if ($spec->{"install_v$from_v"}) {
+                    log_debug("Creating version $from_v of database schema ...");
+                    my $i = 0;
+                    for my $step (@{ $spec->{"install_v$from_v"} }) {
+                        $i++;
+                        if (ref($step) eq 'CODE') {
+                            eval { $step->($dbh) }; if ($@) { $res = [500, "Died when executing code from install_v$from_v\'s step #$i: $@"]; last SETUP }
+                        } else {
+                            $dbh->do($step) or do { $res = [500, "Failed executing SQL statement from install_v$from_v\'s step #$i: ".$dbh->errstr." (SQL statement: $step)"]; last SETUP };
                         }
-                        $dbh->do("UPDATE meta SET value=$from_v WHERE name='$sv_key'")
-                            or do { $err = $dbh->errstr; last INSTALL_OR_UPGRADE_STEP };
-                        $dbh->commit or do { $err = $dbh->errstr; last INSTALL_OR_UPGRADE_STEP };
-                        $current_v = $from_v;
-                        next INSTALL_OR_UPGRADE_STEP;
-                    } else {
-                        $err = "Error in spec: Can't find 'install_v$from_v' key in spec";
-                        last INSTALL_OR_UPGRADE_STEP;
                     }
+                    $current_v = $from_v;
+                    $dbh->do("UPDATE meta SET value=$from_v WHERE name='$sv_key'")
+                        or do { $res = [500, "Couldn't set $sv_key in meta table: ".$dbh->errstr]; last SETUP };
+
+                    if ($current_v == $latest_v) {
+                        if (my $up_res = $code_update_provides->()) { $res = [500, "Couldn't update provides information: $up_res"]; last SETUP }
+                    }
+
+                    $dbh->commit or do { $res = [500, "Couldn't commit: ".$dbh->errstr]; last SETUP };
+                    $db_state = 'committed';
+
+                    next SETUP;
                 } else {
-                    # install directly the latest version
-                    if ($spec->{install}) {
-                        log_debug("Creating latest version of database schema ...");
-                        for my $step (@{ $spec->{install} }) {
-                            if (ref($step) eq 'CODE') {
-                                eval { $step->($dbh) }; if ($@) { $err = $@; last INSTALL_OR_UPGRADE_STEP }
-                            } else {
-                                $dbh->do($step) or do { $err = $dbh->errstr; last INSTALL_OR_UPGRADE_STEP };
-                            }
+                    $res = [400, "Error in spec: Can't find 'install_v$from_v' key in spec"];
+                    last SETUP;
+                }
+            } else {
+                # install directly the latest version
+                if ($spec->{install}) {
+                    log_debug("Creating latest version of database schema ...");
+                    my $i = 0;
+                    for my $step (@{ $spec->{install} }) {
+                        $i++;
+                        if (ref($step) eq 'CODE') {
+                            eval { $step->($dbh) }; if ($@) { $res = [500, "Died when executing code from install's step #$i: $@"]; last SETUP }
+                        } else {
+                            $dbh->do($step) or do { $res = [500, "Failed executing SQL statement from install's step #$i: ".$dbh->errstr." (SQL statement: $step)"]; last SETUP };
                         }
-                        $dbh->do("UPDATE meta SET value=$latest_v WHERE name='$sv_key'")
-                            or do { $err = $dbh->errstr; last INSTALL_OR_UPGRADE_STEP };
-                        $dbh->commit or do { $err = $dbh->errstr; last INSTALL_OR_UPGRADE_STEP };
-                        last INSTALL_OR_UPGRADE_STEP;
-                    } elsif ($spec->{upgrade_to_v1}) {
-                        # there is no 'install' but 'upgrade_to_v1', so we upgrade
-                        # from v1 to latest
-                        goto UPGRADE;
-                    } else {
-                        $err = "Error in spec: Can't find 'install' key in spec";
-                        last INSTALL_OR_UPGRADE_STEP;
                     }
-                }
-            } # install
+                    $dbh->do("UPDATE meta SET value=$latest_v WHERE name='$sv_key'")
+                        or do { $res = [500, "Couldn't update $sv_key in meta table: ".$dbh->errstr]; last SETUP };
 
-          UPGRADE:
-            my $next_v = $current_v + 1;
-            log_debug("Updating database schema from version $current_v to $next_v ...");
-            $spec->{"upgrade_to_v$next_v"}
-                or do { $err = "Error in spec: upgrade_to_v$next_v not specified"; last INSTALL_OR_UPGRADE_STEP };
-            for my $step (@{ $spec->{"upgrade_to_v$next_v"} }) {
-                if (ref($step) eq 'CODE') {
-                    eval { $step->($dbh) }; if ($@) { $err = $@; last INSTALL_OR_UPGRADE_STEP }
+                    if (my $up_res = $code_update_provides->()) { $res = [500, "Couldn't update provides information: $up_res"]; last SETUP }
+
+                    $dbh->commit or do { $res = [500, "Couldn't commit: ".$dbh->errstr]; last SETUP };
+                    $db_state = 'committed';
+
+                    last SETUP;
+                } elsif ($spec->{upgrade_to_v1}) {
+                    # there is no 'install' but 'upgrade_to_v1', so we upgrade
+                    # from v1 to latest
+                    goto UPGRADE;
                 } else {
-                    $dbh->do($step) or do { $err = $dbh->errstr; last INSTALL_OR_UPGRADE_STEP };
+                    $res = [400, "Error in spec: Can't find 'install' key in spec"];
+                    last SETUP;
                 }
             }
-            $dbh->do("UPDATE meta SET value=$next_v WHERE name='$sv_key'")
-                or do { $err = $dbh->errstr; last INSTALL_OR_UPGRADE_STEP };
-            $dbh->commit or do { $err = $dbh->errstr; last INSTALL_OR_UPGRADE_STEP };
-            $current_v = $next_v;
-        } # INSTALL_OR_UPGRADE_STEP
+        } # install
 
-      WRITE_PROVIDES:
-        {
-            my @k;
-            for my $t (sort keys %provides) {
-                my $prov = $provides{$t};
-                next unless $prov->[0] eq $comp;
-                delete $provides{$t};
-                push @k, "table.$t";
-            }
-            if (@k) {
-                $dbh->do("DELETE FROM meta WHERE name IN (".
-                             join(",", map { $dbh->quote($_) } @k).")");
-            }
-            for my $t (@provides) {
-                $provides{$t} = [$comp, $latest_v];
-                $dbh->do("INSERT INTO meta (name, value) VALUES (?, ?)",
-                         {},
-                         "table.$t",
-                         "$comp:$latest_v",
-                     );
+      UPGRADE:
+        my $next_v = $current_v + 1;
+        log_debug("Updating database schema from version $current_v to $next_v ...");
+        $spec->{"upgrade_to_v$next_v"}
+            or do { $res = [400, "Error in spec: upgrade_to_v$next_v not specified"]; last SETUP };
+        my $i = 0;
+        for my $step (@{ $spec->{"upgrade_to_v$next_v"} }) {
+            $i++;
+            if (ref($step) eq 'CODE') {
+                eval { $step->($dbh) }; if ($@) { $res = [500, "Died when executing code from upgrade_to_v$next_v\'s step #$i: $@"]; last SETUP }
+            } else {
+                $dbh->do($step) or do { $res = [500, "Failed executing SQL statement from upgrade_to_v$next_v\'s step #$i: ".$dbh->errstr." (SQL statement: $step)"]; last SETUP };
             }
         }
+        $current_v = $next_v;
+        $dbh->do("UPDATE meta SET value=$next_v WHERE name='$sv_key'")
+            or do { $res = [500, "Couldn't set $sv_key in meta table: ".$dbh->errstr]; last SETUP };
+
+        if ($current_v == $latest_v) {
+            if (my $up_res = $code_update_provides->()) { $res = [500, "Couldn't update provides information: $up_res"]; last SETUP }
+        }
+
+        $dbh->commit or do { $res = [500, "Couldn't commit: ".$dbh->errstr]; last SETUP };
+        $db_state = 'committed';
+
+    } # SETUP
+
+    $res //= [200, "OK (upgraded from version $orig_v to $latest_v)", {version=>$latest_v}];
+
+    if ($res->[0] != 200) {
+        log_error("Failed creating/upgrading schema: %s", $res);
+        $dbh->rollback unless $db_state eq 'committed';
+    } else {
+        $dbh->commit unless $db_state eq 'committed';
     }
 
-    if ($err) {
-        log_error("Can't upgrade schema (from version $orig_v): $err");
-        $dbh->rollback;
-        return [500, "Can't upgrade schema (from version $orig_v): $err"];
-    } else {
-        return [200, "OK (upgraded from version $orig_v to $latest_v)", {version=>$latest_v}];
-    }
+    $res;
 }
 
 1;

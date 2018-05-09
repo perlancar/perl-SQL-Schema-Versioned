@@ -94,11 +94,11 @@ sub v_is {
 }
 
 connect_db();
-reset_db();
 
 # XXX fail install due to error in coderef
 
 subtest "create (v1)" => sub {
+    reset_db();
     my $spec = clone($spec0);
     delete $spec->{install}; $spec->{latest_v} = 1;
     my $res = create_or_update_db_schema(dbh => $dbh, spec => $spec);
