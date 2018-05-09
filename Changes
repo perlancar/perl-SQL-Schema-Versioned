@@ -1,3 +1,11 @@
+0.233   2018-05-09 (PERLANCAR)
+
+	- Handle case where meta table already exists but the
+	  schema_version.* row does not exist.
+
+	- [doc] Formatting.
+
+
 0.232   2018-05-09 (PERLANCAR)
 
 	- [Bugfix] Fix improper commit introduced in 0.230.
