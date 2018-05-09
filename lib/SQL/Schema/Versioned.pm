@@ -414,7 +414,6 @@ sub create_or_update_db_schema {
 
   SETUP:
     while (1) {
-        log_trace "tmp: current_v=$current_v";
         last if $current_v >= $latest_v;
 
         # we should only begin writing to the database from this step, because
@@ -430,6 +429,9 @@ sub create_or_update_db_schema {
             unless (@has_meta_table) {
                 $dbh->do("CREATE TABLE meta (name VARCHAR(64) NOT NULL PRIMARY KEY, value VARCHAR(255))")
                     or do { $res = [500, "Couldn't create meta table: ".$dbh->errstr]; last SETUP };
+            }
+            my $sv_row = $dbh->selectrow_hashref("SELECT * FROM meta WHERE name='$sv_key'");
+            unless ($sv_row) {
                 $dbh->do("INSERT INTO meta (name,value) VALUES ('$sv_key',0)")
                     or do { $res = [500, "Couldn't insert to meta table: ".$dbh->errstr]; last SETUP };
             }
