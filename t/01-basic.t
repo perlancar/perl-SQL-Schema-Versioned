@@ -1,16 +1,16 @@
 #!perl
 
-use 5.010;
+use 5.010001;
 use strict;
 use warnings;
+use Test::Exception;
+use Test::More 0.98;
 
 use Data::Clone;
 use DBI;
 use File::chdir;
 use File::Temp qw(tempdir);
 use SQL::Schema::Versioned qw(create_or_update_db_schema);
-use Test::Exception;
-use Test::More 0.98;
 
 my $dir = tempdir(CLEANUP => 1);
 $CWD = $dir;
