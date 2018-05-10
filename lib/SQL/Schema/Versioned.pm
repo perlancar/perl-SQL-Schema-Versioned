@@ -567,9 +567,9 @@ having to put SQL in separate files/subdirectory.
 
 =head2 How do I see each SQL statement as it is being executed?
 
-Try using L<Log::Any::For::DBI>, e.g.:
+Try using L<Log::ger::DBI::Query>, e.g.:
 
- % TRACE=1 perl -MLog::Any::For::DBI -MLog::Any::App yourapp.pl ...
+ % perl -MLog::ger::DBI::Query -MLog::ger::Output=Screen -MLog::ger::Level::trace yourapp.pl ...
 
 
 =head1 BEST PRACTICES
