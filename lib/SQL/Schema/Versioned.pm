@@ -439,7 +439,7 @@ sub create_or_update_db_schema {
             if ($from_v) {
                 # install from a specific version
                 if ($spec->{"install_v$from_v"}) {
-                    log_debug("Creating version $from_v of database schema ...");
+                    log_debug("Creating version $from_v of database schema (component $comp) ...");
                     my $i = 0;
                     for my $step (@{ $spec->{"install_v$from_v"} }) {
                         $i++;
@@ -468,7 +468,7 @@ sub create_or_update_db_schema {
             } else {
                 # install directly the latest version
                 if ($spec->{install}) {
-                    log_debug("Creating latest version of database schema ...");
+                    log_debug("Creating latest version of database schema (component $comp) ...");
                     my $i = 0;
                     for my $step (@{ $spec->{install} }) {
                         $i++;
@@ -500,7 +500,7 @@ sub create_or_update_db_schema {
 
       UPGRADE:
         my $next_v = $current_v + 1;
-        log_debug("Updating database schema from version $current_v to $next_v ...");
+        log_debug("Updating database schema (component $comp) from version $current_v to $next_v ...");
         $spec->{"upgrade_to_v$next_v"}
             or do { $res = [400, "Error in spec: upgrade_to_v$next_v not specified"]; last SETUP };
         my $i = 0;
