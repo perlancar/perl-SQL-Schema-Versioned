@@ -96,7 +96,8 @@ a.k.a. v0 to v1), which is basically the same thing.
 This routine will check the existence of the `meta` table and the current schema
 version. If `meta` table does not exist yet, the SQL statements in `install`
 will be executed. The `meta` table will also be created and a row
-`('schema_version', 1)` is added.
+`('schema_version', 1)` is added. The (`schema_summary`, <SUMMARY>) row will
+also be added if your spec specifies a `summary`.
 
 If `meta` table already exists, schema version will be read from it and one or
 more series of SQL statements from `upgrade_to_v$VERSION` will be executed to
@@ -139,6 +140,7 @@ from the `daily_price` e.g. to calculate 52-week momentum, and writes to the
     # spec for the price application component
     {
         component_name => 'price',
+        summary => "Price application component",
         latest_v => 1,
         provides => ['daily_price', 'spot_price'],
         install => [...],
@@ -148,6 +150,7 @@ from the `daily_price` e.g. to calculate 52-week momentum, and writes to the
     # spec for the portfolio application component
     {
         component_name => 'portfolio',
+        summary => "Portfolio application component",
         latest_v => 1,
         provides => ['account', 'balance', 'tx'],
         deps => {
@@ -161,6 +164,7 @@ from the `daily_price` e.g. to calculate 52-week momentum, and writes to the
     # spec for the trade application component
     {
         component_name => 'trade',
+        summary => "Trade application component",
         latest_v => 1,
         provides => ['order'],
         deps => {
@@ -179,12 +183,12 @@ and `deps`.
 When `component_name` is set, then instead of the `schema_version` key in the
 `meta` table, your component will use the `schema_version.<COMPONENT_NAME>` key.
 When `component_name` is not set, it is assumed to be `main` and the
-`schema_version` key is used in the `meta` table.
+`schema_version` key is used in the `meta` table. The component `summary`, if
+specified, will also be written to `schema_summary.<COMPONENT_NAME>` key.
 
 `provides` is an array of tables to help this routine know which table(s) your
 component create and maintain. If unset, this routine will try to guess from
-looking at "CREATE TABLE" SQL statements. It is recommended that you supply
-`provides` to makes things easier.
+looking at "CREATE TABLE" SQL statements.
 
 This routine will create `table.<TABLE_NAME>` keys in the `meta` table to record
 which components currently maintain which tables. The value of the key is
@@ -407,6 +411,22 @@ sub create_or_update_db_schema {
         "";
     };
 
+    my $code_update_summary = sub {
+        my $key = "schema_summary".($comp eq 'main' ? '' : ".$comp");
+        my ($cur_summary) = $dbh->selectrow_array(
+            "SELECT value FROM meta WHERE name=?", {}, $key);
+        $cur_summary //= "";
+        my $new_summary = $spec->{summary} // "";
+        return "" if $cur_summary eq $new_summary;
+        $dbh->do("REPLACE INTO meta (name, value) VALUES (?, ?)",
+                 {},
+                 $key,
+                 $new_summary,
+             ) or return $dbh->errstr;
+        # success
+        "";
+    };
+
     my $begun;
     my $res;
 
@@ -518,6 +538,7 @@ sub create_or_update_db_schema {
 
         if ($current_v == $latest_v) {
             if (my $up_res = $code_update_provides->()) { $res = [500, "Couldn't update provides information: $up_res"]; last SETUP }
+            if (my $us_res = $code_update_summary->())  { $res = [500, "Couldn't update summary: $us_res"]; last SETUP }
         }
 
         $dbh->commit or do { $res = [500, "Couldn't commit: ".$dbh->errstr]; last SETUP };
