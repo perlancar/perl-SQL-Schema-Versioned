@@ -1,6 +1,8 @@
 package SQL::Schema::Versioned;
 
+# AUTHORITY
 # DATE
+# DIST
 # VERSION
 
 use 5.010001;
@@ -575,7 +577,9 @@ routine at the start of your program/script, e.g.:
      unless $res->[0] == 200;
 
 This way, your program automatically creates/updates database schema when run.
-Users need not know anything.
+Users need not know anything. See more concrete examples in the F<t/> directory
+of this distribution, or some applications that use this module like
+L<App::lcpan> or L<SQLite::Counter::Simple>.
 
 
 =head1 FAQ
