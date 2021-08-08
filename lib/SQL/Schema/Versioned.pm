@@ -570,15 +570,42 @@ routine at the start of your program/script, e.g.:
 
  use DBI;
  use SQL::Schema::Versioned qw(create_or_update_db_schema);
- my $spec = {...}; # the schema specification
+ my $spec = { # the schema specification
+    latest_v => 3,
+
+    install => [
+        "CREATE TABLE t1 (i INT)",
+        "CREATE TABLE t4 (i INT)",
+    ],
+
+    upgrade_to_v1 => [
+        "CREATE TABLE t1 (i INT)",
+        "CREATE TABLE t2 (i INT)",
+        "CREATE TABLE t3 (i INT)",
+    ],
+    upgrade_to_v2 => [
+        "CREATE TABLE t4 (i INT)",
+        "DROP TABLE t3",
+    ],
+    upgrade_to_v3 => [
+        "DROP TABLE t2",
+    ],
+
+    install_v2 => [
+        "CREATE TABLE t1 (i INT)",
+        "CREATE TABLE t2 (i INT)",
+        "CREATE TABLE t4 (i INT)",
+    ],
+ };
  my $dbh = DBI->connect(...);
  my $res = create_or_update_db_schema(dbh=>$dbh, spec=>$spec);
  die "Cannot run the application: cannot create/upgrade database schema: $res->[1]"
      unless $res->[0] == 200;
 
 This way, your program automatically creates/updates database schema when run.
-Users need not know anything. See more concrete examples in the F<t/> directory
-of this distribution, or some applications that use this module like
+Users need not know anything.
+
+See more elaborate examples in some applications that use this module like
 L<App::lcpan> or L<SQLite::Counter::Simple>.
 
 
